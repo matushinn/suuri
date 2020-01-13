@@ -1,0 +1,473 @@
+\documentclass{jsarticle}
+\begin{document}
+\title{情報数理学習レポート}
+\author{大江祥太郎}
+
+\section{目的}
+自律移動ロボット(ANIMABOT BEATLE)を使って、ソフトウェア制御を実践し、可動部を持つハードウェアには必ずばらつきが存在することを理解し、
+ロボットを正確に動かすための制御方法を考察する。
+
+\section{方法}
+ANIMABOT ROBOT(自律移動ロボット)を利用する。\\
+このロボットに内蔵されたプロセッサのタイマ-を使用することにより、BEATLEの動作する時間を制御できる。\\
+またこのロボットの制御プログラムは、PC上の開発環境においてC言語により作成する。\\
+作成したプログラムは、実行可能なモジュールに変換されBEATLE本体に転送され、ロボット上の処理プロセッサで実行され、
+ロボットが動作を行う。\\
+また可動部を持つハードウェアには誤差があり、全く同じ動作を繰り返させても、毎回違いが生じる繰り返しのばらつきと、部品が設計通りになっていないため、カタログ値とズレが生じる系統的なズレがある。\\
+このようなばらつきはコストをかければ減らすことはできるが、それは使用上の要求とコストのバランスで決められる。\\
+
+\section{考察}
+\subsection{実験１による考察}
+BEATLEを前進させるプログラム
+  \begin{verbatim}
+  #include <Servo.h>//モータ用のインクルード
+    Servo servoL;
+    Servo servoR;
+    Servo arm;
+    int a; // arm sensor
+
+    void setup() {
+      // put your setup code here, to run once:
+    servoR.attach(4);//右モータのピンが4に配線されている場合のアタッチ
+    servoL.attach(5);//左モータのピンが5に配線されている場合のアタッチ
+    arm.attach(8);//8番のモータをアームのモータとする
+    /*モータ回転位置初期化*/
+    servoR.write(90);
+    servoL.write(90);
+    arm.write(90);
+    Serial.begin(9600);//シリアル通信の転送速度
+    }
+
+    void set_motor(int L,int R){
+      servoL.write(L);
+      servoR.write(R);
+    }
+
+    void loop() {
+    /*ここにプログラムを記述する*/
+    set_motor(150,30);//前進
+     delay(2000);
+    set_motor(90,90);//停止
+     delay(5000);
+
+    }
+  \end{verbatim}
+\begin{table}[htbp]
+  \begin{center}
+      \caption{実験１のグラフ}
+          \begin{tabular}{c|c|c|c|c|c}
+            \hline
+            X & Y(1回目) & Y(2回目) & Y(3回目) & Y(4回目) & Y(5回目) \\ \hline \hline
+            1.0 & 55.2 & 59.5 & 59.2 & 61.4 & 62.1 \\
+            2.0 & 137.4 & 134.6 & 136.9 & 134.5 & 139.8 \\
+            3.0 & 205.5 & 203.4 & 200.4 & 200.2 & 199.5 \\
+            4.0 & 276.5 & 275.1 & 272.4 & 271.8 & 271.5  \\
+            \hline
+          \end{tabular}
+  \end{center}
+\end{table}
+
+
+\subsection{実験2による考察}
+BEATLEを方向転換させるプログラム
+  \begin{verbatim}
+  #include <Servo.h>//モータ用のインクルード
+    Servo servoL;
+    Servo servoR;
+    Servo arm;
+    int a; // arm sensor
+
+    void setup() {
+      // put your setup code here, to run once:
+    servoR.attach(4);//右モータのピンが4に配線されている場合のアタッチ
+    servoL.attach(5);//左モータのピンが5に配線されている場合のアタッチ
+    arm.attach(8);//8番のモータをアームのモータとする
+    /*モータ回転位置初期化*/
+    servoR.write(90);
+    servoL.write(90);
+    arm.write(90);
+    Serial.begin(9600);//シリアル通信の転送速度
+    }
+
+    void set_motor(int L,int R){
+      servoL.write(L);
+      servoR.write(R);
+    }
+
+    void loop() {
+    /*ここにプログラムを記述する*/
+    set_motor(150,150);//右旋回
+      delay(3000);
+
+    set_motor(91,91);//停止
+     delay(10000);
+
+    }
+  \end{verbatim}
+\begin{table}[htbp]
+  \begin{center}
+      \caption{実験2のグラフ}
+          \begin{tabular}{c|c|c|c|c|c}
+            \hline
+            X & Y(1回目) & Y(2回目) & Y(3回目) & Y(4回目) & Y(5回目) \\ \hline \hline
+            1.0 & 63.5 & 63.5 & 63.5 & 63.5 & 63.5 \\
+            2.0 & 124.5 & 126.5 & 127.5 & 126.0 & 125.0 \\
+            3.0 & 264.0 & 263.5 & 265.0 & 260.5 & 263.5 \\
+            4.0 & 389.5 & 390.5 & 388.0 & 388.5 & 388.0  \\
+            \hline
+          \end{tabular}
+  \end{center}
+\end{table}
+
+\subsection{実験3による考察}
+実験3のプログラム
+  \begin{verbatim}
+  #include <Servo.h>//モータ用のインクルード
+  Servo servoL;
+  Servo servoR;
+  Servo arm;
+  int a; // arm sensor
+
+  void setup() {
+    // put your setup code here, to run once:
+  servoR.attach(6);//右モータのピンが4に配線されている場合のアタッチ
+  servoL.attach(7);//左モータのピンが5に配線されている場合のアタッチ
+  arm.attach(8);//8番のモータをアームのモータとする
+  /*モータ回転位置初期化*/
+  servoR.write(90);
+  servoL.write(90);
+  arm.write(90);
+  Serial.begin(9600);//シリアル通信の転送速度
+  }
+
+  void set_motor(int L,int R){
+    servoL.write(L);
+    servoR.write(R);
+  }
+
+  void loop() {
+  /*ここにプログラムを記述する*/
+  set_motor(120,50);//直進1
+  delay(4000);
+  set_motor(90,90);//停止
+   delay(500);
+
+
+  set_motor(168,143);//右旋回 90°
+    delay(800);
+  set_motor(91,91);//停止
+   delay(500);
+
+
+  set_motor(117,50);//直進2
+    delay(2500);//2秒プログラム止めて直進を維持
+  set_motor(91,91);//停止
+   delay(1000);
+
+
+  set_motor(168,143);//右旋回 90°
+    delay(750);
+  set_motor(90,90);//停止
+   delay(1000);
+
+
+  set_motor(117,50);//直進3
+    delay(3700);
+  set_motor(91,91);//停止
+   delay(1000);
+
+
+  set_motor(48,23);//左旋回 90
+    delay(950);
+  set_motor(91,91);//停止
+   delay(1000);
+
+
+  set_motor(117,50);//直進4
+    delay(2450);
+  set_motor(91,91);//停止
+   delay(1000);
+
+
+  set_motor(48,23);//左旋回 90  -400
+    delay(950);
+  set_motor(91,91);//停止
+   delay(1000);
+
+
+  set_motor(117,50);//直進5
+    delay(1700);
+  set_motor(91,91);//停止
+   delay(1000);
+
+
+  set_motor(168,143);//右旋回 90°
+    delay(750);
+  set_motor(91,91);//停止
+   delay(1000);
+
+
+  set_motor(117,50);//直進
+    delay(3700);
+  set_motor(91,91);//停止
+   delay(1000);
+
+
+    set_motor(48,23);//左旋回
+    delay(950);// 90
+  set_motor(91,91);//停止
+   delay(1000);
+
+
+  set_motor(117,50);//直進
+    delay(1600);
+  set_motor(91,91);//停止
+   delay(1000);
+
+
+  set_motor(91,91);//停止
+   delay(10000);
+
+  }
+
+\end{table}
+
+\subsection{実験4による考察}
+\begin{table}[htbp]
+  \begin{center}
+  \caption{PCのグラフ}
+      \begin{tabular}{c|c|c|c|c}
+        \hline
+        X & Y(1回目) & Y(2回目) & Y(3回目) & Y(4回目)\\ \hline \hline
+        90mm & 1 & 2 & 1 & 2 \\
+        100mm & 462 & 457 & 465 & 462 \\
+        120mm & 637 & 638 & 637 & 639 \\
+        150mm & 635 & 636 & 635 & 635\\
+        200mm & 413 & 412 & 415 & 414 \\
+        \hline
+      \end{tabular}
+    \end{center}
+\end{table}
+begin{table}[htbp]
+  \begin{center}
+  \caption{PCケース(布)のグラフ}
+      \begin{tabular}{c|c|c|c|c}
+        \hline
+        X & Y(1回目) & Y(2回目) & Y(3回目) & Y(4回目)\\ \hline \hline
+        90mm & 380 & 378 & 379 & 382 \\
+        100mm & 470 & 469 & 466 & 467 \\
+        120mm & 580 & 583 & 579 & 578 \\
+        150mm & 640 & 689 & 642 & 640\\
+        200mm & 439 & 438 & 437 & 431 \\
+        \hline
+      \end{tabular}
+    \end{center}
+\end{table}
+begin{table}[htbp]
+  \begin{center}
+  \caption{箱(ダンボール)のグラフ}
+      \begin{tabular}{c|c|c|c|c}
+        \hline
+        X & Y(1回目) & Y(2回目) & Y(3回目) & Y(4回目)\\ \hline \hline
+        90mm & 378 & 377 & 375 & 376 \\
+        100mm & 461 & 464 & 461 & 462 \\
+        120mm & 605 & 608 & 607 & 606 \\
+        150mm & 639 & 641 & 640 & 641\\
+        200mm & 426 & 419 & 421 & 422 \\
+        \hline
+      \end{tabular}
+    \end{center}
+\end{table}
+begin{table}[htbp]
+  \begin{center}
+  \caption{ブロック(コンクリート)のグラフ}
+      \begin{tabular}{c|c|c|c|c}
+        \hline
+        X & Y(1回目) & Y(2回目) & Y(3回目) & Y(4回目)\\ \hline \hline
+        90mm & 369 & 370 & 365 & 366 \\
+        100mm & 279 & 280 & 282 & 281 \\
+        120mm & 617 & 615 & 618 & 616 \\
+        150mm & 635 & 633 & 634 & 636 \\
+        200mm & 414 & 413 & 411 & 412 \\
+        \hline
+      \end{tabular}
+    \end{center}
+\end{table}
+
+\iffalse
+\begin{table}[htbp]
+  \begin{center}
+      \caption{PCのグラフ}
+          \begin{tabular}{c|c|c|c|c}
+            \hline
+            X & Y(1回目) & Y(2回目) & Y(3回目) & Y(4回目)\\ \hline \hline
+            90mm & 1 & 2 & 1 & 2 \\
+            100mm & 462 & 457 & 465 & 462 \\
+            120mm & 637 & 638 & 637 & 639 \\
+            150mm & 635 & 636 & 635 & 635\\
+            200mm & 413 & 412 & 415 & 414 \\
+            \hline
+          \end{tabular}
+        \end{center}
+        \caption{PCケース(布)のグラフ}
+            \begin{tabular}{c|c|c|c|c}
+              \hline
+              X & Y(1回目) & Y(2回目) & Y(3回目) & Y(4回目)\\ \hline \hline
+              90mm & 380 & 378 & 379 & 382 \\
+              100mm & 470 & 469 & 466 & 467 \\
+              120mm & 580 & 583 & 579 & 578 \\
+              150mm & 640 & 689 & 642 & 640\\
+              200mm & 439 & 438 & 437 & 431 \\
+              \hline
+            \end{tabular}
+          \end{center}
+          \caption{箱(ダンボール)のグラフ}
+              \begin{tabular}{c|c|c|c|c}
+                \hline
+                X & Y(1回目) & Y(2回目) & Y(3回目) & Y(4回目)\\ \hline \hline
+                90mm & 378 & 377 & 375 & 376 \\
+                100mm & 461 & 464 & 461 & 462 \\
+                120mm & 605 & 608 & 607 & 606 \\
+                150mm & 639 & 641 & 640 & 641\\
+                200mm & 426 & 419 & 421 & 422 \\
+                \hline
+              \end{tabular}
+            \end{center}
+            \caption{ブロック(コンクリート)のグラフ}
+                \begin{tabular}{c|c|c|c|c}
+                  \hline
+                  X & Y(1回目) & Y(2回目) & Y(3回目) & Y(4回目)\\ \hline \hline
+                  90mm & 369 & 370 & 365 & 366 \\
+                  100mm & 279 & 280 & 282 & 281 \\
+                  120mm & 617 & 615 & 618 & 616 \\
+                  150mm & 635 & 633 & 634 & 636 \\
+                  200mm & 414 & 413 & 411 & 412 \\
+                  \hline
+                \end{tabular}
+              \end{center}
+    \end{tabular}
+  \end{center}
+\end{table}
+\fi
+
+\section{実験5による考察}
+BEATLEを前進させ、障害物を感知したら90度方向転換させるプログラム
+  \begin{verbatim}
+  #include <Servo.h>//モータ用のインクルード
+    Servo servoL;
+    Servo servoR;
+    Servo arm;
+    int a; // arm sensor
+
+    void setup() {
+      // put your setup code here, to run once:
+    servoR.attach(4);//右モータのピンが4に配線されている場合のアタッチ
+    servoL.attach(5);//左モータのピンが5に配線されている場合のアタッチ
+    arm.attach(8);//8番のモータをアームのモータとする
+    /*モータ回転位置初期化*/
+    servoR.write(90);
+    servoL.write(90);
+    arm.write(90);
+    Serial.begin(9600);//シリアル通信の転送速度
+    }
+
+    /*このプログラムではモータの回転角（速度）を与える関数を作っている*/
+    void set_motor(int L, int R){
+      servoL.write(L);//0≦L≦180、90から離れるほど速く回転
+      servoR.write(R);//0≦R≦180
+    }
+
+    void loop() {
+    /*ここにプログラムを記述する*/
+    a = analogRead(A5);//A5番のピンについている距離センサの値を読み取り
+      Serial.println(a);//センサ値出力
+      Serial.println();//シリアルモニタ上で改行
+    if(a>500) {//回転
+      arm.write(90);//アームが前向きになるよう維持
+      set_motor(150,150);//右旋回
+      delay(750);//n秒の時n*1000の値を入力
+    }else{//それ以外のとき直進するように速度をあたえる
+      set_motor(160,56);//直進
+      arm.write(90);//アームが前向きになるよう維持
+    }
+      delay(100);
+    }
+
+  \end{verbatim}
+
+\section{実験6による考察}
+  オプション課題のプログラム
+    \begin{verbatim}
+    #include <Servo.h>//モータ用のインクルード
+      Servo servoL;
+      Servo servoR;
+      Servo arm;
+      int a; // arm sensor
+
+      void setup() {
+        // put your setup code here, to run once:
+      servoR.attach(6);//右モータのピンが4に配線されている場合のアタッチ
+      servoL.attach(7);//左モータのピンが5に配線されている場合のアタッチ
+      arm.attach(8);//8番のモータをアームのモータとする
+      /*モータ回転位置初期化*/
+      servoR.write(90);
+      servoL.write(90);
+      arm.write(90);
+      Serial.begin(9600);//シリアル通信の転送速度
+      }
+
+      /*このプログラムではモータの回転角（速度）を与える関数を作っている*/
+      void set_motor(int L, int R){
+        servoL.write(L);//0≦L≦180、90から離れるほど速く回転
+        servoR.write(R);//0≦R≦180
+      }
+
+      void loop() {
+      /*ここにプログラムを記述する*/
+      a = analogRead(A5);//A5番のピンについている距離センサの値を読み取り
+        Serial.println(a);//センサ値出力
+        Serial.println();//シリアルモニタ上で改行
+      if(a>600) {//回転
+        arm.write(90);//アームが前向きになるよう維持
+
+        set_motor(120,50);//直進
+        delay(300);//n秒の時n*1000の値を入力
+
+        arm.write(90);//アームが前向きになるよう維持
+
+        set_motor(168,143);//右旋回
+        delay(750);//n秒の時n*1000の値を入力
+
+        arm.write(90);//アームが前向きになるよう維持
+
+        set_motor(65,151);//後退
+        delay(100);//n秒の時n*1000の値を入力
+
+        a = analogRead(A5);
+
+        if(a>350){
+          arm.write(90);//アームが前向きになるよう維持
+          set_motor(168,143);//右旋回
+          delay(1650);//n秒の時n*1000の値を入力
+          set_motor(65,151);//後退
+          delay(100);//n秒の時n*1000の値を入力
+          a = analogRead(A5);
+
+          if(a>400){
+            arm.write(90);//アームが前向きになるよう維持
+            set_motor(168,143);//右旋回
+            delay(750);//n秒の時n*1000の値を入力
+            set_motor(89,89);//停止
+            delay(10000);//n秒の時n*1000の値を入力
+          }
+        }
+      }else{//それ以外のとき直進するように速度をあたえる
+        set_motor(120,50);//直進
+        arm.write(90);//アームが前向きになるよう維持
+      }
+        delay(100);
+      }
+
+    \end{verbatim}
+
+\end{document}
